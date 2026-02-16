@@ -90,18 +90,27 @@ const SortableHeader: FC<SortableHeaderProps> = ({
 
 // --- StatusBadge ---
 
-const StatusBadge: FC<{ status: string }> = ({ status }) => (
-  <span
-    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
-    style={{
-      backgroundColor: status === "Safe" ? COLORS.Light : "white",
-      borderColor: COLORS[status as keyof typeof COLORS],
-      color: COLORS[status as keyof typeof COLORS],
-    }}
-  >
-    {status}
-  </span>
-);
+const StatusBadge: FC<{ status: string }> = ({ status }) => {
+  // Determine background color
+  let backgroundColor = "white";
+  if (status === "Safe") backgroundColor = COLORS.SafeBg;
+  else if (status === "Slight") backgroundColor = COLORS.SlightBg;
+  else if (status === "Moderate") backgroundColor = COLORS.ModerateBg;
+  else if (status === "Severe") backgroundColor = COLORS.SevereBg;
+
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+      style={{
+        backgroundColor,
+        borderColor: COLORS[status as keyof typeof COLORS],
+        color: COLORS[status as keyof typeof COLORS],
+      }}
+    >
+      {status}
+    </span>
+  );
+};
 
 // --- MatchTypeIndicator ---
 const MatchTypeIndicator: FC<{ type?: "phone" | "name" | "manual" }> = ({
