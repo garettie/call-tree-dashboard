@@ -16,7 +16,11 @@ interface DashboardContentProps {
   onRefresh?: () => void;
 }
 
-export function DashboardContent({ data, storageKey, onRefresh }: DashboardContentProps) {
+export function DashboardContent({
+  data,
+  storageKey,
+  onRefresh,
+}: DashboardContentProps) {
   const [filters, setFilters] = useState({
     departments: [] as string[],
     locations: [] as string[],
@@ -26,16 +30,19 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
   const [filtersInitialized, setFiltersInitialized] = useState(false);
 
   // --- Filter Persistence & Initialization ---
-  
-  const handleFilterChange = useCallback((type: keyof typeof filters, value: string[]) => {
-    setFilters((prev) => {
-      const next = { ...prev, [type]: value };
-      if (storageKey) {
-        localStorage.setItem(storageKey, JSON.stringify(next));
-      }
-      return next;
-    });
-  }, [storageKey]);
+
+  const handleFilterChange = useCallback(
+    (type: keyof typeof filters, value: string[]) => {
+      setFilters((prev) => {
+        const next = { ...prev, [type]: value };
+        if (storageKey) {
+          localStorage.setItem(storageKey, JSON.stringify(next));
+        }
+        return next;
+      });
+    },
+    [storageKey],
+  );
 
   useEffect(() => {
     // If we have data and haven't initialized filters yet...
@@ -48,7 +55,9 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
             setFilters(JSON.parse(saved));
             setFiltersInitialized(true);
             return;
-          } catch { /* ignore error, fall back to default */ }
+          } catch {
+            /* ignore error, fall back to default */
+          }
         }
       }
 
@@ -67,8 +76,11 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
           levels: [] as string[],
           statuses: [] as string[],
         };
-        setFilters((prev) => ({ ...prev, departments: Array.from(activeDepts) }));
-        
+        setFilters((prev) => ({
+          ...prev,
+          departments: Array.from(activeDepts),
+        }));
+
         if (storageKey) {
           localStorage.setItem(storageKey, JSON.stringify(nextFilters));
         }
@@ -81,25 +93,51 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
 
   const filteredData = useMemo(() => {
     return data.contacts.filter((c) => {
-      if (filters.departments.length > 0 && !filters.departments.includes(c.department)) return false;
-      if (filters.locations.length > 0 && !filters.locations.includes(c.location)) return false;
-      if (filters.levels.length > 0 && !filters.levels.includes(c.level || c.position)) return false;
-      if (filters.statuses.length > 0 && !filters.statuses.includes(c.status)) return false;
+      if (
+        filters.departments.length > 0 &&
+        !filters.departments.includes(c.department)
+      )
+        return false;
+      if (
+        filters.locations.length > 0 &&
+        !filters.locations.includes(c.location)
+      )
+        return false;
+      if (
+        filters.levels.length > 0 &&
+        !filters.levels.includes(c.level || c.position)
+      )
+        return false;
+      if (filters.statuses.length > 0 && !filters.statuses.includes(c.status))
+        return false;
       return true;
     });
   }, [data.contacts, filters]);
 
   const stats = useMemo(() => {
     const total = filteredData.length;
-    const responded = filteredData.filter((c) => c.status !== "No Response").length;
+    const responded = filteredData.filter(
+      (c) => c.status !== "No Response",
+    ).length;
     const safe = filteredData.filter((c) => c.status === "Safe").length;
     const slight = filteredData.filter((c) => c.status === "Slight").length;
     const moderate = filteredData.filter((c) => c.status === "Moderate").length;
     const severe = filteredData.filter((c) => c.status === "Severe").length;
     const affected = slight + moderate + severe;
-    const pending = filteredData.filter((c) => c.status === "No Response").length;
+    const pending = filteredData.filter(
+      (c) => c.status === "No Response",
+    ).length;
 
-    return { total, responded, safe, affected, slight, moderate, severe, pending };
+    return {
+      total,
+      responded,
+      safe,
+      affected,
+      slight,
+      moderate,
+      severe,
+      pending,
+    };
   }, [filteredData]);
 
   // --- Render ---
@@ -116,13 +154,18 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
       {(() => {
         const respondedStatuses = ["Safe", "Slight", "Moderate", "Severe"];
         const affectedStatuses = ["Slight", "Moderate", "Severe"];
-        
-        const isRespondedActive = filters.statuses.length === respondedStatuses.length && 
-          respondedStatuses.every(s => filters.statuses.includes(s));
-        const isSafeActive = filters.statuses.length === 1 && filters.statuses.includes("Safe");
-        const isAffectedActive = filters.statuses.length === affectedStatuses.length && 
-          affectedStatuses.every(s => filters.statuses.includes(s));
-        const isPendingActive = filters.statuses.length === 1 && filters.statuses.includes("No Response");
+
+        const isRespondedActive =
+          filters.statuses.length === respondedStatuses.length &&
+          respondedStatuses.every((s) => filters.statuses.includes(s));
+        const isSafeActive =
+          filters.statuses.length === 1 && filters.statuses.includes("Safe");
+        const isAffectedActive =
+          filters.statuses.length === affectedStatuses.length &&
+          affectedStatuses.every((s) => filters.statuses.includes(s));
+        const isPendingActive =
+          filters.statuses.length === 1 &&
+          filters.statuses.includes("No Response");
 
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
@@ -143,7 +186,12 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
                   : "0%"
               }
               color={COLORS.Primary}
-              onClick={() => handleFilterChange("statuses", isRespondedActive ? [] : respondedStatuses)}
+              onClick={() =>
+                handleFilterChange(
+                  "statuses",
+                  isRespondedActive ? [] : respondedStatuses,
+                )
+              }
               isActive={isRespondedActive}
             />
             <KPICard
@@ -155,7 +203,9 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
                   : "0%"
               }
               color={COLORS.Safe}
-              onClick={() => handleFilterChange("statuses", isSafeActive ? [] : ["Safe"])}
+              onClick={() =>
+                handleFilterChange("statuses", isSafeActive ? [] : ["Safe"])
+              }
               isActive={isSafeActive}
             />
             <KPICard
@@ -163,11 +213,16 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
               value={stats.affected.toLocaleString()}
               subtext={
                 stats.responded > 0
-                ? `${Math.round((stats.severe / stats.responded) * 100)}% Severe`
-                : "0%"
+                  ? `${Math.round((stats.severe / stats.responded) * 100)}% Severe`
+                  : "0%"
               }
               color={COLORS.Slight}
-              onClick={() => handleFilterChange("statuses", isAffectedActive ? [] : affectedStatuses)}
+              onClick={() =>
+                handleFilterChange(
+                  "statuses",
+                  isAffectedActive ? [] : affectedStatuses,
+                )
+              }
               isActive={isAffectedActive}
             />
             <KPICard
@@ -178,8 +233,13 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
                   ? `${Math.round((stats.pending / stats.total) * 100)}% awaiting`
                   : "0%"
               }
-              color={COLORS.Slight}
-              onClick={() => handleFilterChange("statuses", isPendingActive ? [] : ["No Response"])}
+              color={COLORS.Moderate}
+              onClick={() =>
+                handleFilterChange(
+                  "statuses",
+                  isPendingActive ? [] : ["No Response"],
+                )
+              }
               isActive={isPendingActive}
             />
           </div>
@@ -223,9 +283,11 @@ export function DashboardContent({ data, storageKey, onRefresh }: DashboardConte
             if (onRefresh) {
               onRefresh();
             } else {
-              console.warn("Manual response added, but no refresh handler provided. Data may be stale until next auto-refresh.");
+              console.warn(
+                "Manual response added, but no refresh handler provided. Data may be stale until next auto-refresh.",
+              );
             }
-          }} 
+          }}
         />
       </div>
     </div>
