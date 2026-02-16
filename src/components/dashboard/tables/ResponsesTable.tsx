@@ -5,6 +5,10 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Phone,
+  User,
+  Keyboard,
+  HelpCircle,
 } from "lucide-react";
 import type { ProcessedContact } from "../../../types";
 import { COLORS } from "../../../lib/constants";
@@ -99,6 +103,45 @@ const StatusBadge: FC<{ status: string }> = ({ status }) => (
   </span>
 );
 
+// --- MatchTypeIndicator ---
+const MatchTypeIndicator: FC<{ type?: "phone" | "name" | "manual" }> = ({
+  type,
+}) => {
+  if (!type) return null;
+
+  let Icon = HelpCircle;
+  let title = "Unknown Match";
+  let colorClass = "text-gray-400";
+
+  switch (type) {
+    case "phone":
+      Icon = Phone;
+      title = "Matched by Phone Number";
+      colorClass = "text-blue-400";
+      break;
+    case "name":
+      Icon = User;
+      title = "Matched by Name (Fuzzy)";
+      colorClass = "text-purple-400";
+      break;
+    case "manual":
+      Icon = Keyboard;
+      title = "Manually Entered";
+      colorClass = "text-amber-400";
+      break;
+  }
+
+  return (
+    <div className="group relative ml-2 inline-flex">
+      <Icon className={`w-3.5 h-3.5 ${colorClass}`} />
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50">
+        {title}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+      </div>
+    </div>
+  );
+};
+
 // --- Main Component ---
 
 export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
@@ -112,7 +155,9 @@ export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
     if (!searchTerm) return data;
     const q = searchTerm.toLowerCase();
     return data.filter((c) =>
-      SEARCH_FIELDS.some((f) => (c[f]?.toString().toLowerCase() ?? "").includes(q))
+      SEARCH_FIELDS.some((f) =>
+        (c[f]?.toString().toLowerCase() ?? "").includes(q),
+      ),
     );
   }, [data, searchTerm]);
 
@@ -122,7 +167,11 @@ export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
     const dir = direction === "asc" ? 1 : -1;
     return [...filteredData].sort((a, b) => {
       if (key === "responseTime") {
-        return dir * (new Date(a.responseTime || 0).getTime() - new Date(b.responseTime || 0).getTime());
+        return (
+          dir *
+          (new Date(a.responseTime || 0).getTime() -
+            new Date(b.responseTime || 0).getTime())
+        );
       }
       const va = (a[key] ?? "").toString().toLowerCase();
       const vb = (b[key] ?? "").toString().toLowerCase();
@@ -146,6 +195,7 @@ export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
       location: c.location,
       datetime: c.responseTime,
       number: c.cleanNumber,
+      matchType: c.matchType,
     }));
     downloadCSV(csvData, "responses.csv");
   };
@@ -201,7 +251,12 @@ export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
                 key={row.id || row.number}
                 className="hover:bg-gray-50/50 transition-colors"
               >
-                <td className="px-6 py-3 text-gray-900">{row.name}</td>
+                <td className="px-6 py-3 text-gray-900 flex items-center">
+                  {row.name}
+                  {row.status !== "No Response" && (
+                    <MatchTypeIndicator type={row.matchType} />
+                  )}
+                </td>
                 <td className="px-6 py-3">
                   <StatusBadge status={row.status} />
                 </td>

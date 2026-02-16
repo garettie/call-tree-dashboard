@@ -22,6 +22,7 @@ export interface ProcessedContact extends Contact {
   status: Status;
   responseContent?: string;
   responseTime?: string;
+  matchType?: "phone" | "name" | "manual";
   cleanNumber: string;
 }
 

@@ -33,15 +33,13 @@ const cleanNumber = (num: string | number): string => {
   return String(num).replace(/[\s\-\+\(\)]/g, "");
 };
 
-
-
 // Helper to extract status and potential name from response
 const parseResponse = (content: string): { status: Status; name: string } => {
   if (!content) return { status: "No Response", name: "" };
-  
+
   // 1. Split by whitespace to get tokens
   const tokens = content.trim().split(/\s+/);
-  
+
   // 2. Find the *first* token that matches a known status
   let foundStatus: Status | null = null;
   let statusIndex = -1;
@@ -49,7 +47,7 @@ const parseResponse = (content: string): { status: Status; name: string } => {
   for (let i = 0; i < tokens.length; i++) {
     // Clean punctuation from token to check for status (e.g. "2," -> "2")
     const cleanToken = tokens[i].replace(/[^\w\s]/g, "").toLowerCase();
-    
+
     if (STATUS_MAPPING[cleanToken]) {
       foundStatus = STATUS_MAPPING[cleanToken];
       statusIndex = i;
@@ -62,37 +60,47 @@ const parseResponse = (content: string): { status: Status; name: string } => {
     // Remove the status token
     const nameTokens = [...tokens];
     nameTokens.splice(statusIndex, 1);
-    
+
     // Join back and clean up any leftover punctuation that might have been adjacent
     // e.g. "John - 2" -> "John -" -> "John"
     // e.g. "2, John" -> ", John" -> "John"
     let name = nameTokens.join(" ");
-    
+
     // Remove leading/trailing non-alphanumeric characters (punctuation)
     name = name.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, "");
-    
+
     return { status: foundStatus, name };
   }
-  
+
   // If no status found, return as is with "No Response"
-  return { status: "No Response", name: content.trim() }; 
+  return { status: "No Response", name: content.trim() };
 };
 
 // Fuzzy name matching
-const findContactByName = (searchName: string, contacts: ProcessedContact[]): ProcessedContact | null => {
+const findContactByName = (
+  searchName: string,
+  contacts: ProcessedContact[],
+): ProcessedContact | null => {
   if (!searchName || searchName.length < 2) return null;
-  
+
   // Clean punctuation from search tokens (e.g. "C." -> "c")
-  const searchTokens = searchName.toLowerCase().split(/\s+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(t => t.length > 0);
+  const searchTokens = searchName
+    .toLowerCase()
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-z0-9]/g, ""))
+    .filter((t) => t.length > 0);
   if (searchTokens.length === 0) return null;
 
   // Try to find a contact where ALL search tokens match at least one part of the contact's name
-  const matches = contacts.filter(contact => {
-    const contactNameParts = contact.name.toLowerCase().split(/\s+/).map(t => t.replace(/[^a-z0-9]/g, ""));
-    
-    return searchTokens.every(sToken => {
+  const matches = contacts.filter((contact) => {
+    const contactNameParts = contact.name
+      .toLowerCase()
+      .split(/\s+/)
+      .map((t) => t.replace(/[^a-z0-9]/g, ""));
+
+    return searchTokens.every((sToken) => {
       // Check if this search token matches ANY part of the contact name
-      return contactNameParts.some(cToken => {
+      return contactNameParts.some((cToken) => {
         // If single letter (initial), check startsWith
         if (sToken.length === 1) {
           return cToken.startsWith(sToken);
@@ -106,7 +114,9 @@ const findContactByName = (searchName: string, contacts: ProcessedContact[]): Pr
 
   // [CHANGE] Ambiguity check: if multiple contacts match, return null to be safe
   if (matches.length > 1) {
-    console.warn(`Ambiguous name match for "${searchName}". Found ${matches.length} contacts.`);
+    console.warn(
+      `Ambiguous name match for "${searchName}". Found ${matches.length} contacts.`,
+    );
     return null;
   }
 
@@ -201,7 +211,14 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
         // Filter responses to find latest per contact and separate unknowns
         responses.forEach((r) => {
           const cleanParams = cleanNumber(r.contact);
-          let matchedContactCleanNumber = knownNumbers.has(cleanParams) ? cleanParams : null;
+          let matchedContactCleanNumber = knownNumbers.has(cleanParams)
+            ? cleanParams
+            : null;
+          let matchType: "phone" | "name" | "manual" | undefined = undefined;
+
+          if (matchedContactCleanNumber) {
+            matchType = "phone";
+          }
 
           // If not matched by number, try matching by name
           if (!matchedContactCleanNumber) {
@@ -211,12 +228,15 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
               const matchedContact = findContactByName(name, processedContacts);
               if (matchedContact) {
                 matchedContactCleanNumber = matchedContact.cleanNumber;
-                // Update the contact's status immediately since we have it from parseResponse
-                // But we'll let the merging logic handle it if we push to responseMap 
-                // Wait, responseMap is keyed by number.
-                // We should use the CONTACT'S number as the key in responseMap
+                matchType = "name";
               }
             }
+          }
+
+          // [CHANGE] Check for "Manual Entry" pattern to override matchType
+          // Manual entries are stored as "<Status> - Manual Entry"
+          if (r.contents.toLowerCase().includes("manual entry")) {
+            matchType = "manual";
           }
 
           // If we found a matching contact (either by number or name)
@@ -224,7 +244,19 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
             // Since responses are sorted by desc date (newest first),
             // the first time we see a number (or matched contact), that is their latest response.
             if (!responseMap.has(matchedContactCleanNumber)) {
-              responseMap.set(matchedContactCleanNumber, r);
+              // Store matchType temporarily on the response object to pass it down
+              // We'll attach it to the contact later
+              // We can use a property on the response object, but response is typed as Response.
+              // Let's create an extended response object locally or just store mapped data.
+              // Actually, we can just store the matchType in a separate map or directly in the responseMap value if we extend the type locally.
+              // Easier: Just store the response in responseMap, and we need another way to pass matchType.
+              // Let's make responseMap store { response: Response, matchType: ... }
+              // But wait, responseMap is Map<string, Response>.
+              // I'll augment the response object with matchType. It's safe since it's just runtime data.
+              const boostedResponse = { ...r, matchType } as Response & {
+                matchType: "phone" | "name" | "manual";
+              };
+              responseMap.set(matchedContactCleanNumber, boostedResponse);
             }
           } else {
             unknownResponses.push(r);
@@ -233,13 +265,20 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
 
         // Merge response data into contacts
         processedContacts.forEach((c) => {
-          const resp = responseMap.get(c.cleanNumber);
+          const resp = responseMap.get(c.cleanNumber) as
+            | (Response & { matchType?: "phone" | "name" | "manual" })
+            | undefined;
           if (resp) {
             // We re-parse here to ensure we get the status correctly even if it has a name after it
             const { status } = parseResponse(resp.contents);
             c.status = status;
             c.responseContent = resp.contents;
             c.responseTime = resp.datetime;
+
+            // Allow matchType to flow through (phone or name)
+            // We removed the 'manual' override because it was hiding the matching method info
+            // and seemingly firing for non-manual responses too.
+            c.matchType = resp.matchType;
           }
         });
 
@@ -270,9 +309,12 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
   useEffect(() => {
     // Initial fetch
     fetchDataRef.current();
-    
-    const interval = setInterval(() => fetchDataRef.current({ background: true }), 60000); // Auto-refresh every 60s
-    
+
+    const interval = setInterval(
+      () => fetchDataRef.current({ background: true }),
+      60000,
+    ); // Auto-refresh every 60s
+
     // [REMOVED] Realtime Subscription (Not available for user)
     // We rely on manual refresh (onResponseAdded) and the 60s interval below
 

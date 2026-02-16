@@ -72,57 +72,55 @@ export default function IncidentDetail({
 
       {/* Incident Info Banner */}
       <div
-          className={`mb-6 p-4 rounded-lg flex items-center justify-between shadow-sm border-l-4 ${
-            isTest
-              ? "bg-blue-50 border-blue-500"
-              : "bg-red-50 border-red-500"
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <div
-              className={`p-2 rounded-full ${isTest ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"}`}
+        className={`mb-6 p-4 rounded-lg flex items-center justify-between shadow-sm border-l-4 ${
+          isTest ? "bg-blue-50 border-blue-500" : "bg-red-50 border-red-500"
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          <div
+            className={`p-2 rounded-full ${isTest ? "bg-blue-100 text-blue-600" : "bg-red-100 text-red-600"}`}
+          >
+            {isTest ? (
+              <CheckCircle2 className="w-6 h-6" />
+            ) : (
+              <AlertTriangle className="w-6 h-6" />
+            )}
+          </div>
+          <div>
+            <h2
+              className={`text-lg font-bold ${isTest ? "text-blue-900" : "text-red-900"}`}
             >
-              {isTest ? (
-                <CheckCircle2 className="w-6 h-6" />
-              ) : (
-                <AlertTriangle className="w-6 h-6" />
+              {incident.name}
+            </h2>
+            <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {formatDateShort(incident.start_time)}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                {formatTimeShort(incident.start_time)} –{" "}
+                {incident.end_time ? formatTimeShort(incident.end_time) : "—"}
+              </span>
+              {incident.end_time && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                  Duration:{" "}
+                  {formatDuration(incident.start_time, incident.end_time)}
+                </span>
               )}
-            </div>
-            <div>
-              <h2
-                className={`text-lg font-bold ${isTest ? "text-blue-900" : "text-red-900"}`}
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${
+                  isTest
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-red-100 text-red-700"
+                }`}
               >
-                {incident.name}
-              </h2>
-              <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {formatDateShort(incident.start_time)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {formatTimeShort(incident.start_time)} –{" "}
-                  {incident.end_time ? formatTimeShort(incident.end_time) : "—"}
-                </span>
-                {incident.end_time && (
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                    Duration:{" "}
-                    {formatDuration(incident.start_time, incident.end_time)}
-                  </span>
-                )}
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase ${
-                    isTest
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {incident.type}
-                </span>
-              </div>
+                {incident.type}
+              </span>
             </div>
           </div>
         </div>
+      </div>
 
       {loading && (
         <div className="flex items-center justify-center py-12">
@@ -131,9 +129,9 @@ export default function IncidentDetail({
       )}
 
       {!loading && (
-        <DashboardContent 
-          data={data} 
-          storageKey={`incident-filters-${incident.id}`} 
+        <DashboardContent
+          data={data}
+          storageKey={`incident-filters-${incident.id}`}
           onRefresh={() => refresh({ background: true })}
         />
       )}
