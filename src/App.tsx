@@ -3,14 +3,16 @@ import { DashboardHeader } from "./components/dashboard/DashboardHeader";
 import { DashboardContent } from "./components/dashboard/DashboardContent";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { supabase } from "./lib/supabase";
+import { localNowAsUTC } from "./lib/utils";
 import { useIncident } from "./hooks/useIncident";
 import IncidentControls from "./components/dashboard/IncidentControls";
 import IncidentHistory from "./components/dashboard/IncidentHistory";
+import type { Incident } from "./types";
 
 function App() {
   // View state: "live" = real-time dashboard, "history" = past incidents archive
   const [view, setView] = useState<"live" | "history">("live");
-  const [defaultIncident, setDefaultIncident] = useState<any>(undefined);
+  const [defaultIncident, setDefaultIncident] = useState<Incident | undefined>(undefined);
 
   // Initialize Incident Logic
   const { activeIncident, loading: incidentLoading, startIncident, endIncident } = useIncident();
@@ -43,9 +45,7 @@ function App() {
       return activeIncident.start_time;
     }
     // Default: 24 hours ago (formatted as local time in UTC to match Termux)
-    const d = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}Z`;
+    return localNowAsUTC(new Date(Date.now() - 24 * 60 * 60 * 1000));
   }, [activeIncident]);
 
   const { data, loading, error, refresh } = useDashboardData(filterDate);

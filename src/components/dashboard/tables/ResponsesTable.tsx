@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo, type FC } from "react";
 import {
   Download,
   Search,
@@ -56,7 +56,7 @@ interface SortableHeaderProps {
   onSort: (key: SortKey) => void;
 }
 
-const SortableHeader: React.FC<SortableHeaderProps> = ({
+const SortableHeader: FC<SortableHeaderProps> = ({
   label,
   sortKey,
   currentSort,
@@ -86,7 +86,7 @@ const SortableHeader: React.FC<SortableHeaderProps> = ({
 
 // --- StatusBadge ---
 
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
+const StatusBadge: FC<{ status: string }> = ({ status }) => (
   <span
     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
     style={{
@@ -101,7 +101,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => (
 
 // --- Main Component ---
 
-export const ResponsesTable: React.FC<ResponsesTableProps> = ({ data }) => {
+export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: null,

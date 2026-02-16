@@ -40,8 +40,7 @@ export function formatPhoneNumber(num: string | null | undefined): string {
   return num.startsWith("+") ? num : `+${digits}`;
 }
 
-export function localNowAsUTC(): string {
-  const d = new Date();
+export function localNowAsUTC(d: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}Z`;
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo, type FC } from 'react';
 import { MultiSelect } from '../ui/MultiSelect';
 import type { ProcessedContact } from '../../types';
 
@@ -13,11 +13,11 @@ interface FiltersProps {
   onFilterChange: (type: 'departments' | 'locations' | 'levels' | 'statuses', value: string[]) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({ data, filters, onFilterChange }) => {
+export const Filters: FC<FiltersProps> = ({ data, filters, onFilterChange }) => {
   // Extract unique options from data
-  const uniqueDepts = React.useMemo(() => Array.from(new Set(data.map(c => c.department).filter(Boolean))).sort(), [data]);
-  const uniqueLocs = React.useMemo(() => Array.from(new Set(data.map(c => c.location).filter(Boolean))).sort(), [data]);
-  const uniqueLevels = React.useMemo(() => Array.from(new Set(data.map(c => c.level || c.position).filter(Boolean))).sort(), [data]);
+  const uniqueDepts = useMemo(() => Array.from(new Set(data.map(c => c.department).filter(Boolean))).sort(), [data]);
+  const uniqueLocs = useMemo(() => Array.from(new Set(data.map(c => c.location).filter(Boolean))).sort(), [data]);
+  const uniqueLevels = useMemo(() => Array.from(new Set(data.map(c => c.level || c.position).filter(Boolean))).sort(), [data]);
   const uniqueStatuses = ['Severe', 'Moderate', 'Slight', 'Safe', 'No Response'];
 
   return (

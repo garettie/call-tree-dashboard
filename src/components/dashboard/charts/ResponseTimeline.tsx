@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo, type FC } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { ProcessedContact } from '../../../types';
 import { COLORS } from '../../../lib/constants';
@@ -7,7 +7,7 @@ interface ResponseTimelineProps {
   data: ProcessedContact[];
 }
 
-export const ResponseTimeline: React.FC<ResponseTimelineProps> = ({ data }) => {
+export const ResponseTimeline: FC<ResponseTimelineProps> = ({ data }) => {
   const chartData = useMemo(() => {
     const validData = data
       .filter(c => c.responseTime && c.status !== 'No Response')
@@ -56,7 +56,7 @@ export const ResponseTimeline: React.FC<ResponseTimelineProps> = ({ data }) => {
             <Tooltip 
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 itemStyle={{ fontSize: '12px', fontWeight: 500, color: COLORS.Primary }}
-                formatter={(value: any) => [value, 'Responses']}
+                formatter={(value: number | undefined) => [value ?? 0, 'Responses']}
                 labelStyle={{ color: '#6b7280', fontSize: '11px', marginBottom: '4px', display: 'block' }}
                 labelFormatter={(label) => new Date(label).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })}
             />

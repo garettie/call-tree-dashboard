@@ -67,7 +67,8 @@ export function StartIncidentForm({ onStart, onCancel }: StartIncidentFormProps)
         <div className="flex gap-3 mt-6 pt-2 border-t border-gray-100">
           <button
             onClick={() => onStart(name, type)}
-            className="flex-1 bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 font-medium flex justify-center items-center gap-2"
+            disabled={!name.trim()}
+            className="flex-1 bg-slate-900 text-white px-4 py-2 rounded hover:bg-slate-800 font-medium flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-slate-900"
           >
             <Play className="w-4 h-4" />
             Start

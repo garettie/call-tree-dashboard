@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo, type FC } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import type { ProcessedContact } from '../../../types';
 import { COLORS, STATUS_ORDER } from '../../../lib/constants';
@@ -9,7 +9,7 @@ interface DemographicChartProps {
   title: string;
 }
 
-export const DemographicChart: React.FC<DemographicChartProps> = ({ data, category, title }) => {
+export const DemographicChart: FC<DemographicChartProps> = ({ data, category, title }) => {
   const chartData = useMemo(() => {
     const counts: Record<string, Record<string, number>> = {};
     const totals: Record<string, number> = {};

@@ -547,7 +547,8 @@ export default function IncidentHistory({
                   </div>
                 </div>
             <div className="flex items-center gap-2">
-                  <div
+                  <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEdit(incident);
@@ -555,8 +556,9 @@ export default function IncidentHistory({
                     className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors"
                   >
                     <Pencil className="w-4 h-4" />
-                  </div>
-                  <div
+                  </button>
+                  <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(incident);
@@ -564,7 +566,7 @@ export default function IncidentHistory({
                     className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </div>
+                  </button>
                   <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors" />
                 </div>
               </button>

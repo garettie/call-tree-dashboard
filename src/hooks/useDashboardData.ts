@@ -138,8 +138,8 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
           orderBy?: string,
           minDate?: string,
           maxDate?: string,
-        ) => {
-          let allData: any[] = [];
+        ): Promise<Record<string, unknown>[]> => {
+          let allData: Record<string, unknown>[] = [];
           let from = 0;
           const step = 1000;
           while (true) {
@@ -180,8 +180,8 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
           endDate,
         );
 
-        const contacts = (contactsData || []) as Contact[];
-        const responses = (responsesData || []) as Response[];
+        const contacts = (contactsData || []) as unknown as Contact[];
+        const responses = (responsesData || []) as unknown as Response[];
 
         // --- The rest of your logic remains exactly the same ---
 
@@ -248,9 +248,9 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
           unknownResponses,
           lastUpdated: new Date(),
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error fetching dashboard data:", err);
-        setError(err.message || "Failed to fetch data");
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
       } finally {
         if (!options?.background) {
           setLoading(false);

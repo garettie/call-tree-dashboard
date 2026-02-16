@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Users, CheckCircle, ShieldCheck, AlertCircle, Clock } from 'lucide-react';
 
 
@@ -22,7 +22,7 @@ const getIcon = (label: string) => {
     }
 };
 
-export const KPICard: React.FC<KPICardProps> = ({ label, value, subtext, color, onClick, isActive }) => {
+export const KPICard: FC<KPICardProps> = ({ label, value, subtext, color, onClick, isActive }) => {
   const Icon = getIcon(label);
   
   return (

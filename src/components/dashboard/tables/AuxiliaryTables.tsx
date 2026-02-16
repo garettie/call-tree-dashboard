@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from "react";
-import { Download, AlertTriangle, Search, Clock } from "lucide-react";
+import { useState, useMemo, type FC } from "react";
+import { Download, AlertTriangle, Search, Clock, X, Save } from "lucide-react";
 import type { ProcessedContact, Response } from "../../../types";
 import { downloadCSV } from "../../../lib/csv";
-import { formatDateTime, formatPhoneNumber } from "../../../lib/utils";
+import { formatDateTime, formatPhoneNumber, localNowAsUTC } from "../../../lib/utils";
+import { supabase } from "../../../lib/supabase";
+import { COLORS } from "../../../lib/constants";
 
 // --- Shared class-name tokens ---
 
@@ -20,7 +22,7 @@ interface TableCardProps {
   children: React.ReactNode;
 }
 
-const TableCard: React.FC<TableCardProps> = ({ title, action, children }) => (
+const TableCard: FC<TableCardProps> = ({ title, action, children }) => (
   <div className="glass-card flex flex-col overflow-hidden h-full max-h-[400px]">
     <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
       <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
@@ -32,7 +34,7 @@ const TableCard: React.FC<TableCardProps> = ({ title, action, children }) => (
 
 // --- DownloadButton (shared between both tables) ---
 
-const DownloadButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+const DownloadButton: FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
     onClick={onClick}
     className="text-gray-500 hover:text-accent-primary transition-colors"
@@ -43,7 +45,7 @@ const DownloadButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 
 // --- UnknownTable ---
 
-export const UnknownTable: React.FC<{ data: Response[] }> = ({ data }) => {
+export const UnknownTable: FC<{ data: Response[] }> = ({ data }) => {
   if (data.length === 0) return null;
 
   const handleDownload = () => {
@@ -74,7 +76,7 @@ export const UnknownTable: React.FC<{ data: Response[] }> = ({ data }) => {
         </thead>
         <tbody className="divide-y divide-gray-100">
           {data.map((row, i) => (
-            <tr key={i} className="hover:bg-gray-50/50">
+            <tr key={`${row.contact}-${row.datetime}-${i}`} className="hover:bg-gray-50/50">
               <td className={CELL_PHONE}>
                 {formatPhoneNumber(row.contact)}
               </td>
@@ -97,18 +99,13 @@ export const UnknownTable: React.FC<{ data: Response[] }> = ({ data }) => {
 
 // --- ManualResponseModal ---
 
-import { X, Save } from "lucide-react";
-import { supabase } from "../../../lib/supabase";
-import { COLORS } from "../../../lib/constants";
-import { localNowAsUTC } from "../../../lib/utils";
-
 interface ManualResponseModalProps {
   contact: ProcessedContact;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const ManualResponseModal: React.FC<ManualResponseModalProps> = ({
+const ManualResponseModal: FC<ManualResponseModalProps> = ({
   contact,
   onClose,
   onSuccess,
@@ -164,10 +161,13 @@ const ManualResponseModal: React.FC<ManualResponseModalProps> = ({
 
       if (error) throw error;
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to add response:", err);
       // Detailed error for debugging RLS/Schema issues
-      const detailedError = err.message + (err.details ? ` (${err.details})` : "") + (err.hint ? ` [Hint: ${err.hint}]` : "");
+      const message = err instanceof Error ? err.message : "Unknown error";
+      const details = (err as Record<string, string>)?.details;
+      const hint = (err as Record<string, string>)?.hint;
+      const detailedError = message + (details ? ` (${details})` : "") + (hint ? ` [Hint: ${hint}]` : "");
       setErrorMsg(detailedError);
     } finally {
       setLoading(false);
@@ -276,7 +276,7 @@ const PENDING_SEARCH_FIELDS: (keyof ProcessedContact)[] = [
   "number",
 ];
 
-export const PendingTable: React.FC<{ 
+export const PendingTable: FC<{ 
   data: ProcessedContact[];
   onResponseAdded?: () => void; // Callback to trigger refresh
 }> = ({

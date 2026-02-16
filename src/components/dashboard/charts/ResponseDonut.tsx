@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { COLORS } from '../../../lib/constants';
 
@@ -7,7 +7,7 @@ interface ResponseDonutProps {
   total: number;
 }
 
-export const ResponseDonut: React.FC<ResponseDonutProps> = ({ responded, total }) => {
+export const ResponseDonut: FC<ResponseDonutProps> = ({ responded, total }) => {
   const percentage = total > 0 ? (responded / total) * 100 : 0;
   const pending = total - responded;
 

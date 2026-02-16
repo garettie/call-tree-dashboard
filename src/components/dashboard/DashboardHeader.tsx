@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Phone, RefreshCw, Archive, Radio } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -10,7 +10,7 @@ interface HeaderProps {
   onViewChange: (view: 'live' | 'history') => void;
 }
 
-export const DashboardHeader: React.FC<HeaderProps> = ({ lastUpdated, onRefresh, loading, view, onViewChange }) => {
+export const DashboardHeader: FC<HeaderProps> = ({ lastUpdated, onRefresh, loading, view, onViewChange }) => {
   return (
     <header className="sticky top-4 z-50 mb-8 mx-auto max-w-[1600px] transition-all duration-300">
       <div className="glass-panel mx-0 sm:mx-0 lg:mx-0 rounded-2xl px-6 py-4 flex justify-between items-center shadow-premium ring-1 ring-white/50">

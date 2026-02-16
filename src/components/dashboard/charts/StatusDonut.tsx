@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { ProcessedContact } from '../../../types';
 import { COLORS, STATUS_ORDER } from '../../../lib/constants';
@@ -7,7 +7,7 @@ interface StatusDonutProps {
   data: ProcessedContact[];
 }
 
-export const StatusDonut: React.FC<StatusDonutProps> = ({ data }) => {
+export const StatusDonut: FC<StatusDonutProps> = ({ data }) => {
 
   const chartData = STATUS_ORDER.map(status => {
     const count = data.filter(c => c.status === status).length;
