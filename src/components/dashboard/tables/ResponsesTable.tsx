@@ -130,7 +130,7 @@ const MatchTypeIndicator: FC<{ type?: "phone" | "name" | "manual" }> = ({
       break;
     case "name":
       Icon = User;
-      title = "Matched by Name (Fuzzy)";
+      title = "Matched by Name";
       colorClass = "text-purple-400";
       break;
     case "manual":
@@ -231,7 +231,7 @@ export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Filter by name, status, department..."
+            placeholder="Search for employee..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-primary/20 focus:border-accent-primary transition-all"
@@ -239,7 +239,7 @@ export const ResponsesTable: FC<ResponsesTableProps> = ({ data }) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+      <div className="overflow-x-auto overflow-y-auto max-h-150">
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider sticky top-0 z-10">

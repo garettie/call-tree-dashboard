@@ -2,7 +2,11 @@ import { useState, useMemo, type FC } from "react";
 import { Download, AlertTriangle, Search, Clock, X, Save } from "lucide-react";
 import type { ProcessedContact, Response } from "../../../types";
 import { downloadCSV } from "../../../lib/csv";
-import { formatDateTime, formatPhoneNumber, localNowAsUTC } from "../../../lib/utils";
+import {
+  formatDateTime,
+  formatPhoneNumber,
+  localNowAsUTC,
+} from "../../../lib/utils";
 import { supabase } from "../../../lib/supabase";
 import { COLORS } from "../../../lib/constants";
 
@@ -23,7 +27,7 @@ interface TableCardProps {
 }
 
 const TableCard: FC<TableCardProps> = ({ title, action, children }) => (
-  <div className="glass-card flex flex-col overflow-hidden h-full max-h-[400px]">
+  <div className="glass-card flex flex-col overflow-hidden h-full max-h-100">
     <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
       <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
       {action}
@@ -59,10 +63,12 @@ export const UnknownTable: FC<{ data: Response[] }> = ({ data }) => {
 
   return (
     <TableCard
-      title={`Unknown Numbers (${data.length})`}
+      title={`Unknown Responses (${data.length})`}
       action={<DownloadButton onClick={handleDownload} />}
     >
-      <div className={`${BANNER} bg-orange-50 text-orange-700 border-orange-100`}>
+      <div
+        className={`${BANNER} bg-orange-50 text-orange-700 border-orange-100`}
+      >
         <AlertTriangle className="w-3 h-3" />
         Check these responses manually.
       </div>
@@ -76,14 +82,12 @@ export const UnknownTable: FC<{ data: Response[] }> = ({ data }) => {
         </thead>
         <tbody className="divide-y divide-gray-100">
           {data.map((row, i) => (
-            <tr key={`${row.contact}-${row.datetime}-${i}`} className="hover:bg-gray-50/50">
-              <td className={CELL_PHONE}>
-                {formatPhoneNumber(row.contact)}
-              </td>
-              <td
-                className={`${CELL} max-w-[200px] truncate`}
-                title={row.contents}
-              >
+            <tr
+              key={`${row.contact}-${row.datetime}-${i}`}
+              className="hover:bg-gray-50/50"
+            >
+              <td className={CELL_PHONE}>{formatPhoneNumber(row.contact)}</td>
+              <td className={`${CELL} max-w-50 truncate`} title={row.contents}>
                 {row.contents}
               </td>
               <td className={`${CELL} text-xs whitespace-nowrap`}>
@@ -117,10 +121,10 @@ const ManualResponseModal: FC<ManualResponseModalProps> = ({
 
   // Map status words to numeric codes for DB insertion
   const STATUS_CODES: Record<string, string> = {
-    "Safe": "1",
-    "Slight": "2",
-    "Moderate": "3",
-    "Severe": "4",
+    Safe: "1",
+    Slight: "2",
+    Moderate: "3",
+    Severe: "4",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,7 +136,7 @@ const ManualResponseModal: FC<ManualResponseModalProps> = ({
       // 1. Convert Status Word to Number Info
       const statusCode = STATUS_CODES[status] || "1";
       const contents = `${statusCode} - ${message || "Manual Entry"}`;
-      
+
       // Basic validation
       if (!contact.number) throw new Error("Contact number is missing.");
 
@@ -140,21 +144,24 @@ const ManualResponseModal: FC<ManualResponseModalProps> = ({
       let formattedContact = contact.number.replace(/[^0-9]/g, ""); // Strip non-digits
       if (formattedContact.startsWith("09")) {
         formattedContact = "63" + formattedContact.slice(1);
-      } else if (formattedContact.startsWith("9") && formattedContact.length === 10) {
+      } else if (
+        formattedContact.startsWith("9") &&
+        formattedContact.length === 10
+      ) {
         formattedContact = "63" + formattedContact;
       }
       // Ensure it starts with + if it's a PH number (which starts with 63 after normalization)
       if (formattedContact.startsWith("63")) {
         formattedContact = "+" + formattedContact;
       }
-      
+
       // [CHANGE] Generate a unique ID for manual entries to avoid collision with SMS UIDs (which are integers)
       // Format: "m-<timestamp>-<random>"
       const manuallyGeneratedUid = `m-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
       const { error } = await supabase.from("Responses").insert({
         uid: manuallyGeneratedUid,
-        contact: formattedContact, // Use the formatted number with +
+        contact: formattedContact,
         contents: contents,
         datetime: localNowAsUTC(),
       });
@@ -167,7 +174,10 @@ const ManualResponseModal: FC<ManualResponseModalProps> = ({
       const message = err instanceof Error ? err.message : "Unknown error";
       const details = (err as Record<string, string>)?.details;
       const hint = (err as Record<string, string>)?.hint;
-      const detailedError = message + (details ? ` (${details})` : "") + (hint ? ` [Hint: ${hint}]` : "");
+      const detailedError =
+        message +
+        (details ? ` (${details})` : "") +
+        (hint ? ` [Hint: ${hint}]` : "");
       setErrorMsg(detailedError);
     } finally {
       setLoading(false);
@@ -214,12 +224,13 @@ const ManualResponseModal: FC<ManualResponseModalProps> = ({
                       : "hover:bg-gray-50 border-gray-200 text-gray-600"
                   }`}
                   style={{
-                    backgroundColor: status === s ? COLORS[s as keyof typeof COLORS] : undefined,
+                    backgroundColor:
+                      status === s
+                        ? COLORS[s as keyof typeof COLORS]
+                        : undefined,
                     color: status === s ? "#fff" : undefined,
                     borderColor: status === s ? "transparent" : undefined,
-                    // Specific fix for "Safe" text color since generic white might not contrast well with lighter colors, 
-                    // but for "Safe" (green) white is fine. 
-                    // Let's keep it simple.
+                    // Specific fix for "Safe" text color since generic white might not contrast well with lighter colors,
                   }}
                 >
                   {s}
@@ -241,7 +252,7 @@ const ManualResponseModal: FC<ManualResponseModalProps> = ({
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-red-50 text-red-600 text-xs rounded-lg border border-red-100 break-words">
+            <div className="p-3 bg-red-50 text-red-600 text-xs rounded-lg border border-red-100 wrap-break-words">
               Error: {errorMsg}
             </div>
           )}
@@ -276,23 +287,21 @@ const PENDING_SEARCH_FIELDS: (keyof ProcessedContact)[] = [
   "number",
 ];
 
-export const PendingTable: FC<{ 
+export const PendingTable: FC<{
   data: ProcessedContact[];
   onResponseAdded?: () => void; // Callback to trigger refresh
-}> = ({
-  data,
-  onResponseAdded,
-}) => {
+}> = ({ data, onResponseAdded }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedContact, setSelectedContact] = useState<ProcessedContact | null>(null);
+  const [selectedContact, setSelectedContact] =
+    useState<ProcessedContact | null>(null);
 
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
     const q = searchTerm.toLowerCase();
     return data.filter((c) =>
       PENDING_SEARCH_FIELDS.some((f) =>
-        (c[f]?.toString().toLowerCase() ?? "").includes(q)
-      )
+        (c[f]?.toString().toLowerCase() ?? "").includes(q),
+      ),
     );
   }, [data, searchTerm]);
 
@@ -310,7 +319,7 @@ export const PendingTable: FC<{
 
   return (
     <>
-      <div className="glass-card flex flex-col overflow-hidden h-full max-h-[400px]">
+      <div className="glass-card flex flex-col overflow-hidden h-full max-h-100">
         {/* Header + Search */}
         <div className="px-4 py-3 border-b border-gray-100 flex flex-col gap-3 bg-gray-50/50">
           <div className="flex justify-between items-center">
@@ -351,7 +360,10 @@ export const PendingTable: FC<{
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredData.map((row) => (
-                <tr key={row.id || row.number} className="hover:bg-gray-50/50 group">
+                <tr
+                  key={row.id || row.number}
+                  className="hover:bg-gray-50/50 group"
+                >
                   <td className="px-4 py-2 text-gray-900 items-center gap-2">
                     {row.name}
                     <div className="text-[10px] text-gray-400 font-mono">

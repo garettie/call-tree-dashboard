@@ -124,7 +124,7 @@ const findContactByName = (
   return matches.length === 1 ? matches[0] : null;
 };
 
-// [CHANGE 1] Accept startDate and endDate as arguments (optional)
+// Accept startDate and endDate as arguments
 export const useDashboardData = (startDate?: string, endDate?: string) => {
   const [data, setData] = useState<DashboardData>({
     contacts: [],
@@ -314,9 +314,6 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
       () => fetchDataRef.current({ background: true }),
       60000,
     ); // Auto-refresh every 60s
-
-    // [REMOVED] Realtime Subscription (Not available for user)
-    // We rely on manual refresh (onResponseAdded) and the 60s interval below
 
     return () => {
       clearInterval(interval);
