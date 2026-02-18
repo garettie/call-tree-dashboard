@@ -16,18 +16,50 @@ interface DashboardContentProps {
   onRefresh?: () => void;
 }
 
+interface FilterState {
+  departments: string[];
+  locations: string[];
+  levels: string[];
+  statuses: string[];
+}
+
 export function DashboardContent({
   data,
   storageKey,
   onRefresh,
 }: DashboardContentProps) {
-  const [filters, setFilters] = useState({
-    departments: [] as string[],
-    locations: [] as string[],
-    levels: [] as string[],
-    statuses: [] as string[],
+  const [filters, setFilters] = useState<FilterState>(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          return JSON.parse(saved) as FilterState;
+        }
+      } catch {
+        // ignore error, fall back to default
+      }
+    }
+    return {
+      departments: [],
+      locations: [],
+      levels: [],
+      statuses: [],
+    };
   });
-  const [filtersInitialized, setFiltersInitialized] = useState(false);
+
+  const [filtersInitialized, setFiltersInitialized] = useState(() => {
+    if (storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          return true;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return false;
+  });
 
   // --- Filter Persistence & Initialization ---
 
@@ -47,19 +79,7 @@ export function DashboardContent({
   useEffect(() => {
     // If we have data and haven't initialized filters yet...
     if (data.contacts.length > 0 && !filtersInitialized) {
-      // 1. Try loading from storage if key exists
-      if (storageKey) {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-          try {
-            setFilters(JSON.parse(saved));
-            setFiltersInitialized(true);
-            return;
-          } catch {
-            /* ignore error, fall back to default */
-          }
-        }
-      }
+      // Pre-apply filters: show only departments that have at least one respondent
 
       // 2. Pre-apply filters: show only departments that have at least one respondent
       const activeDepts = new Set<string>();
