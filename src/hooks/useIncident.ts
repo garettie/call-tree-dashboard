@@ -7,14 +7,13 @@ export function useIncident() {
   const [activeIncident, setActiveIncident] = useState<Incident | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // --- MOVED THIS UP (Define it before using it) ---
   const checkActiveIncident = async () => {
     try {
       const { data } = await supabase
         .from("incidents")
         .select("*")
         .is("end_time", null)
-        .maybeSingle(); // Use maybeSingle() instead of single() to avoid 406 errors if 0 rows exist
+        .maybeSingle();
 
       setActiveIncident(data);
     } catch (error) {
@@ -24,11 +23,9 @@ export function useIncident() {
     }
   };
 
-  // --- NOW we can use it ---
   useEffect(() => {
     checkActiveIncident();
 
-    // Auto-update if someone else starts an incident
     const channel = supabase
       .channel("schema-db-changes")
       .on(
