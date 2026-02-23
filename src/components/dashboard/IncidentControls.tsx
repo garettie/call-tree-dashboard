@@ -22,7 +22,6 @@ export default function IncidentControls({
 }: IncidentControlsProps) {
   const [showModal, setShowModal] = useState(false);
 
-  // VIEW 1: Active Incident Running
   if (activeIncident) {
     const isTest = activeIncident.type === "test";
 
@@ -70,7 +69,6 @@ export default function IncidentControls({
     );
   }
 
-  // VIEW 2: Start New Event Button
   return (
     <div className="mb-6">
       {!showModal ? (
@@ -82,7 +80,6 @@ export default function IncidentControls({
           <span>Start New Event</span>
         </button>
       ) : (
-        // VIEW 3: The Modal Form
         <div>
           <StartIncidentForm
             onStart={(name, type) => {

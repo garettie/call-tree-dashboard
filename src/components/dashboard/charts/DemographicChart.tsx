@@ -1,48 +1,59 @@
-import { useMemo, type FC } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import type { ProcessedContact } from '../../../types';
-import { COLORS, STATUS_ORDER } from '../../../lib/constants';
+import { useMemo, type FC } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import type { ProcessedContact } from "../../../types";
+import { COLORS, STATUS_ORDER } from "../../../lib/constants";
 
 interface DemographicChartProps {
   data: ProcessedContact[];
-  category: 'department' | 'location';
+  category: "department" | "location";
   title: string;
 }
 
-export const DemographicChart: FC<DemographicChartProps> = ({ data, category, title }) => {
+export const DemographicChart: FC<DemographicChartProps> = ({
+  data,
+  category,
+  title,
+}) => {
   const chartData = useMemo(() => {
     const counts: Record<string, Record<string, number>> = {};
     const totals: Record<string, number> = {};
 
-    data.forEach(c => {
-      const key = c[category] || 'Unknown';
+    data.forEach((c) => {
+      const key = c[category] || "Unknown";
       if (!counts[key]) counts[key] = {};
       if (!totals[key]) totals[key] = 0;
-      
-      const status = c.status || 'No Response';
+
+      const status = c.status || "No Response";
       counts[key][status] = (counts[key][status] || 0) + 1;
       totals[key]++;
     });
 
     const result = Object.keys(counts)
-      .map(key => ({
+      .map((key) => ({
         name: key,
         ...counts[key],
-        total: totals[key]
+        total: totals[key],
       }))
       .sort((a, b) => b.total - a.total);
 
     return result;
   }, [data, category]);
 
-  // Calculate dynamic height based on data items
-  // Min height 200px, max height 600px, 50px per item + buffer
-  const containerHeight = Math.min(Math.max(chartData.length * 50 + 60, 200), 600);
-
-
+  const containerHeight = Math.min(
+    Math.max(chartData.length * 50 + 60, 200),
+    600,
+  );
 
   return (
-    <div 
+    <div
       className="glass-card p-4 flex flex-col"
       style={{ height: containerHeight }}
     >
@@ -84,9 +95,12 @@ export const DemographicChart: FC<DemographicChartProps> = ({ data, category, ti
                   <div className="flex flex-wrap justify-center gap-3 pt-2">
                     {STATUS_ORDER.map((status) => (
                       <div key={status} className="flex items-center gap-1.5">
-                        <div 
-                          className="w-2 h-2 rounded-full" 
-                          style={{ backgroundColor: COLORS[status as keyof typeof COLORS] }} 
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            backgroundColor:
+                              COLORS[status as keyof typeof COLORS],
+                          }}
                         />
                         <span className="text-[10px] font-medium text-gray-600">
                           {status}

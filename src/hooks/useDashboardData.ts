@@ -30,17 +30,14 @@ const STATUS_MAPPING: Record<string, Status> = {
 
 const cleanNumber = (num: string | number): string => {
   if (!num) return "";
-  return String(num).replace(/[\s\-\+\(\)]/g, "");
+  return String(num).replace(/[\s\-+()]/g, "");
 };
 
 // Helper to extract status and potential name from response
 const parseResponse = (content: string): { status: Status; name: string } => {
   if (!content) return { status: "No Response", name: "" };
 
-  // 1. Split by whitespace to get tokens
   const tokens = content.trim().split(/\s+/);
-
-  // 2. Find the *first* token that matches a known status
   let foundStatus: Status | null = null;
   let statusIndex = -1;
 
@@ -55,35 +52,23 @@ const parseResponse = (content: string): { status: Status; name: string } => {
     }
   }
 
-  // 3. If found, remove that token and treat the rest as the name
   if (foundStatus !== null && statusIndex !== -1) {
-    // Remove the status token
     const nameTokens = [...tokens];
     nameTokens.splice(statusIndex, 1);
-
-    // Join back and clean up any leftover punctuation that might have been adjacent
-    // e.g. "John - 2" -> "John -" -> "John"
-    // e.g. "2, John" -> ", John" -> "John"
     let name = nameTokens.join(" ");
-
-    // Remove leading/trailing non-alphanumeric characters (punctuation)
     name = name.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, "");
-
     return { status: foundStatus, name };
   }
 
-  // If no status found, return as is with "No Response"
   return { status: "No Response", name: content.trim() };
 };
 
-// Fuzzy name matching
 const findContactByName = (
   searchName: string,
   contacts: ProcessedContact[],
 ): ProcessedContact | null => {
   if (!searchName || searchName.length < 2) return null;
 
-  // Clean punctuation from search tokens (e.g. "C." -> "c")
   const searchTokens = searchName
     .toLowerCase()
     .split(/\s+/)
@@ -91,7 +76,6 @@ const findContactByName = (
     .filter((t) => t.length > 0);
   if (searchTokens.length === 0) return null;
 
-  // Try to find a contact where ALL search tokens match at least one part of the contact's name
   const matches = contacts.filter((contact) => {
     const contactNameParts = contact.name
       .toLowerCase()
@@ -99,20 +83,15 @@ const findContactByName = (
       .map((t) => t.replace(/[^a-z0-9]/g, ""));
 
     return searchTokens.every((sToken) => {
-      // Check if this search token matches ANY part of the contact name
       return contactNameParts.some((cToken) => {
-        // If single letter (initial), check startsWith
         if (sToken.length === 1) {
           return cToken.startsWith(sToken);
         }
-        // [CHANGE] Use startsWith for stricter matching (e.g. "Dan" shouldn't match "Jordan")
-        // But "Dan" should match "Daniel"
         return cToken.startsWith(sToken);
       });
     });
   });
 
-  // [CHANGE] Ambiguity check: if multiple contacts match, return null to be safe
   if (matches.length > 1) {
     console.warn(
       `Ambiguous name match for "${searchName}". Found ${matches.length} contacts.`,
@@ -120,11 +99,9 @@ const findContactByName = (
     return null;
   }
 
-  // Return the single valid match
   return matches.length === 1 ? matches[0] : null;
 };
 
-// Accept startDate and endDate as arguments
 export const useDashboardData = (startDate?: string, endDate?: string) => {
   const [data, setData] = useState<DashboardData>({
     contacts: [],
@@ -142,7 +119,6 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
         }
         setError(null);
 
-        // [CHANGE 2] Modified fetchAll to accept a date filter
         const fetchAll = async (
           table: string,
           orderBy?: string,
@@ -159,7 +135,6 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
               query = query.order(orderBy, { ascending: false });
             }
 
-            // [CHANGE 3] Apply the date filter if it exists (Only for Responses)
             if (minDate) {
               query = query.gte("datetime", minDate);
             }
@@ -178,10 +153,10 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
           return allData;
         };
 
-        // 1. Fetch Contacts (ALWAYS fetch all of them, no date filter)
+        // 1. Fetch Contacts
         const contactsData = await fetchAll("MasterContacts");
 
-        // 2. Fetch Responses (ONLY fetch those after startDate)
+        // 2. Fetch Responses
         // We pass the startDate here to filter out old "Safe" messages from previous drills
         const responsesData = await fetchAll(
           "Responses",
@@ -192,8 +167,6 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
 
         const contacts = (contactsData || []) as unknown as Contact[];
         const responses = (responsesData || []) as unknown as Response[];
-
-        // --- The rest of your logic remains exactly the same ---
 
         // Process Data
         const processedContacts: ProcessedContact[] = contacts.map((c) => ({
@@ -233,26 +206,12 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
             }
           }
 
-          // [CHANGE] Check for "Manual Entry" pattern to override matchType
-          // Manual entries are stored as "<Status> - Manual Entry"
           if (r.contents.toLowerCase().includes("manual entry")) {
             matchType = "manual";
           }
 
-          // If we found a matching contact (either by number or name)
           if (matchedContactCleanNumber) {
-            // Since responses are sorted by desc date (newest first),
-            // the first time we see a number (or matched contact), that is their latest response.
             if (!responseMap.has(matchedContactCleanNumber)) {
-              // Store matchType temporarily on the response object to pass it down
-              // We'll attach it to the contact later
-              // We can use a property on the response object, but response is typed as Response.
-              // Let's create an extended response object locally or just store mapped data.
-              // Actually, we can just store the matchType in a separate map or directly in the responseMap value if we extend the type locally.
-              // Easier: Just store the response in responseMap, and we need another way to pass matchType.
-              // Let's make responseMap store { response: Response, matchType: ... }
-              // But wait, responseMap is Map<string, Response>.
-              // I'll augment the response object with matchType. It's safe since it's just runtime data.
               const boostedResponse = { ...r, matchType } as Response & {
                 matchType: "phone" | "name" | "manual";
               };
@@ -297,10 +256,8 @@ export const useDashboardData = (startDate?: string, endDate?: string) => {
       }
     },
     [startDate, endDate],
-  ); // [CHANGE 4] Add startDate/endDate to dependency array so it re-runs when you switch incidents
+  );
 
-  // [CHANGE] Use a ref for fetchData so we can use it in the effect without adding it to the dependency array
-  // This prevents the Realtime subscription from breaking/re-connecting whenever fetchData changes identity
   const fetchDataRef = useRef(fetchData);
   useEffect(() => {
     fetchDataRef.current = fetchData;

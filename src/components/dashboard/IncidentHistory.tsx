@@ -72,7 +72,11 @@ export default function IncidentHistory({
   };
 
   const handleDelete = async (incident: Incident) => {
-    if (!window.confirm(`Are you sure you want to delete "${incident.name}"? This cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${incident.name}"? This cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -89,7 +93,6 @@ export default function IncidentHistory({
     }
   };
 
-  // ── Detail View ───
   if (selectedIncident) {
     return (
       <IncidentDetail
@@ -100,7 +103,6 @@ export default function IncidentHistory({
     );
   }
 
-  // ── List View ─────
   return (
     <div className="animate-in fade-in duration-300">
       <div className="flex items-center justify-between mb-6">
@@ -123,7 +125,6 @@ export default function IncidentHistory({
         )}
       </div>
 
-      {/* Register/Edit Event Form */}
       {showRegisterForm && (
         <RegisterIncidentForm
           editingIncident={editingIncident}

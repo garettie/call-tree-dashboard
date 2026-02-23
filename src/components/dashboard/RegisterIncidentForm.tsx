@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  CheckCircle2,
-  AlertTriangle,
-  Plus,
-  X,
-  Pencil,
-} from "lucide-react";
+import { CheckCircle2, AlertTriangle, Plus, X, Pencil } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import type { Incident } from "../../types";
 
@@ -37,17 +31,21 @@ export default function RegisterIncidentForm({
     editingIncident?.type ?? "test",
   );
   const [regStartDate, setRegStartDate] = useState(
-    editingIncident ? formatDateInput(new Date(editingIncident.start_time)) : "",
+    editingIncident
+      ? formatDateInput(new Date(editingIncident.start_time))
+      : "",
   );
   const [regStartTime, setRegStartTime] = useState(
-    editingIncident ? formatTimeInput(new Date(editingIncident.start_time)) : "",
+    editingIncident
+      ? formatTimeInput(new Date(editingIncident.start_time))
+      : "",
   );
-  const [regEndDate, setRegEndDate] = useState(
+  const [regEndDate, setRegEndDate] = useState(() =>
     editingIncident
       ? formatDateInput(new Date(editingIncident.end_time ?? Date.now()))
       : "",
   );
-  const [regEndTime, setRegEndTime] = useState(
+  const [regEndTime, setRegEndTime] = useState(() =>
     editingIncident
       ? formatTimeInput(new Date(editingIncident.end_time ?? Date.now()))
       : "",
@@ -55,7 +53,11 @@ export default function RegisterIncidentForm({
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit =
-    !!regName && !!regStartDate && !!regStartTime && !!regEndDate && !!regEndTime;
+    !!regName &&
+    !!regStartDate &&
+    !!regStartTime &&
+    !!regEndDate &&
+    !!regEndTime;
 
   const handleSave = async () => {
     if (!canSubmit) return;

@@ -61,8 +61,6 @@ export function DashboardContent({
     return false;
   });
 
-  // --- Filter Persistence & Initialization ---
-
   const handleFilterChange = useCallback(
     (type: keyof typeof filters, value: string[]) => {
       setFilters((prev) => {
@@ -77,11 +75,7 @@ export function DashboardContent({
   );
 
   useEffect(() => {
-    // If we have data and haven't initialized filters yet...
     if (data.contacts.length > 0 && !filtersInitialized) {
-      // Pre-apply filters: show only departments that have at least one respondent
-
-      // 2. Pre-apply filters: show only departments that have at least one respondent
       const activeDepts = new Set<string>();
       data.contacts.forEach((c) => {
         if (c.status !== "No Response" && c.department) {
@@ -108,8 +102,6 @@ export function DashboardContent({
       setFiltersInitialized(true);
     }
   }, [data.contacts, filtersInitialized, storageKey]);
-
-  // --- Derived Data ---
 
   const filteredData = useMemo(() => {
     return data.contacts.filter((c) => {
@@ -159,8 +151,6 @@ export function DashboardContent({
       pending,
     };
   }, [filteredData]);
-
-  // --- Render ---
 
   return (
     <div className="animate-in fade-in duration-500">

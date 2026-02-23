@@ -10,17 +10,20 @@ import IncidentHistory from "./components/dashboard/IncidentHistory";
 import type { Incident } from "./types";
 
 function App() {
-  // View state: "live" = real-time dashboard, "history" = past incidents archive
   const [view, setView] = useState<"live" | "history">("live");
-  const [defaultIncident, setDefaultIncident] = useState<Incident | undefined>(undefined);
+  const [defaultIncident, setDefaultIncident] = useState<Incident | undefined>(
+    undefined,
+  );
 
-  // Initialize Incident Logic
-  const { activeIncident, loading: incidentLoading, startIncident, endIncident } = useIncident();
+  const {
+    activeIncident,
+    loading: incidentLoading,
+    startIncident,
+    endIncident,
+  } = useIncident();
 
-  // Effect: Set default view to Latest Incident if no active incident
   useEffect(() => {
     const checkDefault = async () => {
-      // Only proceed if incident loading is done and there is NO active incident
       if (!incidentLoading && !activeIncident) {
         const { data } = await supabase
           .from("incidents")
@@ -39,12 +42,10 @@ function App() {
     checkDefault();
   }, [incidentLoading, activeIncident]);
 
-  // Decide the "Cut-off Date" for data
   const filterDate = useMemo(() => {
     if (activeIncident) {
       return activeIncident.start_time;
     }
-    // Default: 24 hours ago (formatted as local time in UTC to match Termux)
     return localNowAsUTC(new Date(Date.now() - 24 * 60 * 60 * 1000));
   }, [activeIncident]);
 
@@ -68,7 +69,6 @@ function App() {
           }}
         />
 
-        {/* Conditionally render live dashboard or history view */}
         {view === "history" ? (
           <IncidentHistory
             defaultIncident={defaultIncident}
@@ -86,8 +86,8 @@ function App() {
               onEnd={endIncident}
             />
 
-            <DashboardContent 
-              data={data} 
+            <DashboardContent
+              data={data}
               onRefresh={() => refresh({ background: true })}
             />
           </>
