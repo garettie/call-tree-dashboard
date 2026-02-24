@@ -10,7 +10,7 @@ export interface Contact {
 
 export interface Response {
   id?: string;
-  uid?: string; // [CHANGE] Added based on failure report (manual entries need this)
+  uid?: string;
   contact: string;
   contents: string;
   datetime: string;
